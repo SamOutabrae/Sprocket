@@ -94,6 +94,29 @@ def initialize_bot():
   load_cogs(module_mainfiles, client)
 
   client.run(token)
-  
+
+def check_privileged_intents(intents: discord.Intents) -> list:
+    privileged_intents = {
+        "guild_members": intents.members,
+        "message_content": intents.message_content,
+        "guild_presences": intents.presences,
+    }
+
+    required_privileges = [name for name, enabled in privileged_intents.items() if enabled]
+
+    if required_privileges:
+        print("The following privileged intents are enabled and will require explicit permission:")
+        for intent in required_privileges:
+            print(f" - {intent}")
+    else:
+        print("No privileged intents are enabled.")
+
+    return required_privileges
+
 if __name__ == "__main__":
+    if(sys.argv[1] == "intents"):
+      intents = get_intents(get_modules_mainfiles())
+      check_privileged_intents(intents)
+      exit(0)
+
     initialize_bot()
