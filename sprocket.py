@@ -38,29 +38,38 @@ def get_modules_mainfiles() -> list:
     Returns a list of imported mainfiles
   """
   mainfiles = {}
+  modules = None
   
-  with open("modules.toml", "r") as file:
-    modules = toml.load(file)
-    if not modules:
-      raise ValueError("No modules found. Please ensure the modules.toml file is correctly formatted.")
+  if os.path.exists("modules.toml"):
+    with open("modules.toml", "r") as file:
+      modules = toml.load(file)
+      if not modules:
+        raise ValueError("No modules found. Please ensure the modules.toml file is correctly formatted.")
+  elif os.path.exists("modules_default.toml"):
+    logging.warning("No modules.toml found. Using modules_default.toml instead.")
+    with open("modules_default.toml", "r") as file:
+      modules = toml.load(file)
+      if not modules:
+        raise ValueError("No modules found.")
+  else:
+    raise FileNotFoundError("No modules.toml found. Please create it.")
 
-    for module in modules:
-      try:
-       mainfile = modules[module]["mainfile"]
-       logging.debug(f"Found mainfile {mainfile} for {module}")
+  for module in modules:
+    try:
+      mainfile = modules[module]["mainfile"]
+      logging.debug(f"Found mainfile {mainfile} for {module}")
 
-       mainfile_module = import_file("modules/" + mainfile)
-       mainfiles[module] = mainfile_module
-       logging.debug(f"Imported mainfile for {module} sucessfully.")
-       
-      except KeyError as e:
-        logging.error(f"Module {module} does not contain necessary keys. Check the declaration in modules.toml.")
+      mainfile_module = import_file("modules/" + mainfile)
+      mainfiles[module] = mainfile_module
+      logging.debug(f"Imported mainfile for {module} sucessfully.")
+      
+    except KeyError as e:
+      logging.error(f"Module {module} does not contain necessary keys. Check the declaration in modules.toml.")
+  
+    except Exception as e:
+      logging.error(e)
+      logging.error(f"An error occured while importing the mainfile: {module}.")
     
-      except Exception as e:
-        logging.error(e)
-        logging.error(f"An error occured while importing the mainfile: {module}.")
-
-
   return mainfiles
 
 def get_intents(mainfiles: dict) -> discord.Intents:
