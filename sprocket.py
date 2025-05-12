@@ -6,6 +6,15 @@ import sys, os
 
 from discord.ext import commands
 
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("sprocket.log", "w"),
+        logging.StreamHandler()
+    ]
+)
+
 def read_token():
   with open("token.txt", "r") as file:
     token = file.read().strip()
@@ -48,7 +57,9 @@ def get_modules_mainfiles() -> list:
         logging.error(f"Module {module} does not contain necessary keys. Check the declaration in modules.toml.")
     
       except Exception as e:
-        logging.error("An error occured while importing the mainfile.")
+        logging.error(e)
+        logging.error(f"An error occured while importing the mainfile: {module}.")
+
 
   return mainfiles
 
@@ -78,8 +89,10 @@ def load_cogs(mainfiles: dict, client: discord.Client) -> list:
         for cog in module_cogs:
           client.add_cog(cog)
           logging.info("Loaded cog {cog.__name__} from {name}.")
-    except:
-      logging.error("Could not find cogs for {name}.")
+    except Exception as e:
+      logging.error(e)
+      logging.error(f"Could not find cogs for {name}.")
+    print(f"Loaded cogs for {name}.")
   
   logging.info("All cogs loaded.")
 
@@ -114,7 +127,7 @@ def check_privileged_intents(intents: discord.Intents) -> list:
     return required_privileges
 
 if __name__ == "__main__":
-    if(sys.argv[1] == "intents"):
+    if len(sys.argv) > 1 and sys.argv[1] == "intents":
       intents = get_intents(get_modules_mainfiles())
       check_privileged_intents(intents)
       exit(0)
