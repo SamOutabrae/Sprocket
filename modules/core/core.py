@@ -4,11 +4,9 @@ from discord.ext import commands
 import logging
 
 # All module mainfiles MUST define this function
-# Tells sproket what intents this module requires
+# Tells sprocket what intents this module requires
 def get_intents() -> discord.Intents:
   intents = discord.Intents.default()
-  intents.message_content = True
-  
   return intents
 
 # All module mainfiles MUST define this function
