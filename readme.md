@@ -32,6 +32,8 @@ The corresponding `modules.toml` entry looks like this.
 mainfile = "core/core.py"
 ```
 
+**Note:** The category name of the modules.toml **must** match the name of the directory.
+
 If you're using a module written by someone else, they should provide you with the correct entry for `modules.toml`. If you're writing your own module, see **Writing Your Own Modules** below.
 
 ### Intents
@@ -68,9 +70,11 @@ Each module mainfile must implement two functions:
 
 Returns a `discord.Intents` object representing the intents your module requires.
 
-#### get_cogs(client: commands.Bot) -> list
+#### get_cogs(client: commands.Bot, directory: str) -> list
 
-Returns a list of instantiated cogs to be added to the bot.
+Returns a list of instantiated cogs to be added to the bot. Client is the discord bot instance, and directory is the directory of the module.
+
+You don't have to pass these parameters along to your cogs if they do not need them. 
 
 ### Example Module Mainfile (`core.py`):
 
@@ -78,12 +82,16 @@ Returns a list of instantiated cogs to be added to the bot.
 import discord
 from discord.ext import commands
 
-# Required function to specify the intents for this module
+# Specify the intents for this module
 def get_intents() -> discord.Intents:
     intents = discord.Intents.default()
     return intents
 
-# Required function to return a list of cogs for this module
-def get_cogs(client: commands.Bot) -> list:
+# Returns a list of cogs for this module
+def get_cogs(client: commands.Bot, directory: str) -> list:
     return [Core(client)]
 ```
+
+### Error Handling
+
+By default, all errors will be dealt with by the global error handler in the core module. This handler will not run if you provide a command or cog specific error handler. See py-cord's error handling for more details. 

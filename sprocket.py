@@ -4,7 +4,7 @@ import logging
 import importlib
 import sys, os
 
-from discord.ext import commands
+from discord.ext import bridge
 
 logging.basicConfig(
     level=logging.WARNING,
@@ -59,7 +59,11 @@ def get_modules_mainfiles() -> list:
       mainfile = modules[module]["mainfile"]
       logging.debug(f"Found mainfile {mainfile} for {module}")
 
-      mainfile_module = import_file("modules/" + mainfile)
+      directory = "modules/" + module
+      sys.path.append(directory)
+      logging.debug(f"Added {directory} to sys.path.")
+
+      mainfile_module = import_file(directory + "/" + mainfile)
       mainfiles[module] = mainfile_module
       logging.debug(f"Imported mainfile for {module} sucessfully.")
       
@@ -93,7 +97,8 @@ def load_cogs(mainfiles: dict, client: discord.Client) -> list:
   for name, module in mainfiles.items():
     try:
       if hasattr(module, "get_cogs"):
-        module_cogs = module.get_cogs(client)
+        directory = "modules/" + name
+        module_cogs = module.get_cogs(client, directory)
         logging.debug(f"Found cogs for {name}.")
         for cog in module_cogs:
           client.add_cog(cog)
@@ -111,7 +116,7 @@ def initialize_bot():
   module_mainfiles = get_modules_mainfiles()
   intents = get_intents(module_mainfiles)
 
-  client = commands.Bot(intents=intents, command_prefix="!")
+  client = bridge.Bot(intents=intents, command_prefix="!")
 
   load_cogs(module_mainfiles, client)
 
