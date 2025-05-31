@@ -22,16 +22,17 @@ def read_token():
       raise ValueError("Invalid token. Please ensure a valid token is provided in token.txt.")
     return token
 
-def import_file(filepath: str, module_name: str = "temp_module"):
-    spec = importlib.util.spec_from_file_location(module_name, filepath)
-    
-    if spec and spec.loader:
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
-        spec.loader.exec_module(module)
-        return module
-    else:
-        raise ImportError(f"Could not import module from file: {filepath}")
+def get_module(module_name: str, submodule: str):
+
+    # Mount the folder in sys.modules under a fake package name
+    full_module_path = f"modules.{module_name}.{submodule}"  # e.g., modules.sprocket_hypixel.main
+
+    # Make sure 'modules' is in sys.path
+    modules_dir = os.path.abspath("modules")
+    if modules_dir not in sys.path:
+        sys.path.insert(0, modules_dir)
+
+    return importlib.import_module(full_module_path)
 
 def get_modules_mainfiles() -> list:
   """
@@ -56,14 +57,11 @@ def get_modules_mainfiles() -> list:
 
   for module in modules:
     try:
-      mainfile = modules[module]["mainfile"]
-      logging.debug(f"Found mainfile {mainfile} for {module}")
+      directory = f"modules/{module}"
+      mainfile_name = os.path.splitext(os.path.basename(modules[module]['mainfile']))[0]  # strips .py
+      mainfile_module = get_module(module, mainfile_name)
+      logging.debug(f"Found mainfile {mainfile_name} for {module}")
 
-      directory = "modules/" + module
-      sys.path.append(directory)
-      logging.debug(f"Added {directory} to sys.path.")
-
-      mainfile_module = import_file(directory + "/" + mainfile)
       mainfiles[module] = mainfile_module
       logging.debug(f"Imported mainfile for {module} sucessfully.")
       
